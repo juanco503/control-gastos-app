@@ -37,9 +37,9 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
       firstDate: DateTime(2000),
       lastDate: DateTime.now(),
     );
-    if (picked != null && picked != _selectedDate) {
+    if (picked != _selectedDate) {
       setState(() {
-        _selectedDate = picked;
+        _selectedDate = picked!;
       });
     }
   }
