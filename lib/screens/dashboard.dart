@@ -1,7 +1,7 @@
 // screens/dashboard.dart
 
 import 'package:flutter/material.dart';
-import '../models/transaction.dart';
+import '/models/transaction.dart';
 
 class DashboardScreen extends StatelessWidget {
   final List<Transaction> gastos;

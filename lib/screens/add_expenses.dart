@@ -40,9 +40,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       firstDate: DateTime(2000),
       lastDate: DateTime.now(),
     );
-    if (picked != null && picked != _selectedDate) {
+    if (picked != _selectedDate) {
       setState(() {
-        _selectedDate = picked;
+        _selectedDate = picked!;
       });
     }
   }
