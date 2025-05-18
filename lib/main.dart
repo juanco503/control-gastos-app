@@ -1,20 +1,22 @@
-//Importaciones de login y CRUD
+// Importaciones de login y CRUD
 import 'login/login_page.dart';
 import 'login/register_page.dart';
 import 'login/update_page.dart';
 import 'login/delete_page.dart';
 
-//Importaciones app
+// Importaciones app
 import 'package:flutter/material.dart';
 import 'models/transaction.dart';
 import 'screens/dashboard.dart';
 import 'screens/add_expenses.dart';
 import 'screens/add_income.dart';
-
+import 'screens/historial.dart';
+import 'screens/estadisticas.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -28,8 +30,8 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/',
       routes: {
-        '/': (context) => LoginPage(), //Pantalla inicial
-        '/home': (context) => FinanzasHome(), //Pantalla de app de finanzas
+        '/': (context) =>  LoginPage(),        // Pantalla inicial
+        '/home': (context) => const FinanzasHome(), // Pantalla de app de finanzas
         '/register': (context) => RegisterPage(),
         '/update': (context) => UpdatePage(),
         '/delete': (context) => DeletePage(),
@@ -47,19 +49,20 @@ class FinanzasHome extends StatefulWidget {
 }
 
 class _FinanzasHomeState extends State<FinanzasHome> {
-  final List<Transaction> _gastos = [];
-  final List<Transaction> _ingresos = [];
+  final List<Transaction> _transacciones = [];
   int _selectedIndex = 0;
 
+  // Agrega una transacción de tipo gasto
   void _addGasto(Transaction gasto) {
     setState(() {
-      _gastos.add(gasto);
+      _transacciones.add(gasto);
     });
   }
 
+  // Agrega una transacción de tipo ingreso
   void _addIngreso(Transaction ingreso) {
     setState(() {
-      _ingresos.add(ingreso);
+      _transacciones.add(ingreso);
     });
   }
 
@@ -72,9 +75,11 @@ class _FinanzasHomeState extends State<FinanzasHome> {
       body: IndexedStack(
         index: _selectedIndex,
         children: [
-          DashboardScreen(gastos: _gastos, ingresos: _ingresos),
-          AddExpenseScreen(onAdd: _addGasto),
-          AddIncomeScreen(onAdd: _addIngreso),
+          DashboardScreen(transacciones: _transacciones),       // Pantalla de resumen
+          AddExpenseScreen(onAdd: _addGasto),                    // Agregar gasto
+          AddIncomeScreen(onAdd: _addIngreso),                   // Agregar ingreso
+          HistoryScreen(transacciones: _transacciones),          // Historial de transacciones
+          StatisticsScreen(transacciones: _transacciones),       // Estadísticas por categoría
         ],
       ),
       bottomNavigationBar: NavigationBar(
@@ -88,6 +93,8 @@ class _FinanzasHomeState extends State<FinanzasHome> {
           NavigationDestination(icon: Icon(Icons.home), label: 'Inicio'),
           NavigationDestination(icon: Icon(Icons.add_circle), label: 'Gasto'),
           NavigationDestination(icon: Icon(Icons.attach_money), label: 'Ingreso'),
+          NavigationDestination(icon: Icon(Icons.history), label: 'Historial'),
+          NavigationDestination(icon: Icon(Icons.pie_chart), label: 'Estadísticas'),
         ],
       ),
     );
