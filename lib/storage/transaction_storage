@@ -1,0 +1,40 @@
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../models/transaction.dart';
+
+class TransactionStorage {
+  static const String _key = 'transactions';
+
+  /// Guarda una lista de transacciones como JSON en SharedPreferences
+  static Future<void> saveTransactions(List<Transaction> transactions) async {
+    final prefs = await SharedPreferences.getInstance();
+    final List<String> jsonList =
+        transactions.map((t) => jsonEncode(t.toJson())).toList();
+    await prefs.setStringList(_key, jsonList);
+  }
+
+  /// Carga la lista de transacciones desde SharedPreferences
+  static Future<List<Transaction>> loadTransactions() async {
+    final prefs = await SharedPreferences.getInstance();
+    final List<String>? jsonList = prefs.getStringList(_key);
+
+    if (jsonList == null) return [];
+
+    return jsonList
+        .map((jsonStr) => Transaction.fromJson(jsonDecode(jsonStr)))
+        .toList();
+  }
+
+  /// Agrega una sola transacción a la lista y guarda
+  static Future<void> addTransaction(Transaction nueva) async {
+    final transacciones = await loadTransactions();
+    transacciones.add(nueva);
+    await saveTransactions(transacciones);
+  }
+
+  /// Limpia todas las transacciones guardadas
+  static Future<void> clearAll() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_key);
+  }
+}

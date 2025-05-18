@@ -2,8 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:uuid/uuid.dart';
 import '../models/transaction.dart';
-//import 'dart:math';
+import '../storage/transaction_storage';
 
 class AddExpenseScreen extends StatefulWidget {
   final Function(Transaction) onAdd;
@@ -20,10 +21,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   String? _selectedCategory;
   DateTime _selectedDate = DateTime.now();
 
-  // Lista de categorías de ejemplo
-  static const List<String> _categories = [
-    'Alimentos', 'Transporte', 'Salud', 'Entretenimiento', 'Otros'
-  ];
+  // Lista de categorías de gasto
+  static const List<String> _categories = ['Comida', 'Transporte', 'Entretenimiento', 'Otros'];
 
   @override
   void dispose() {
@@ -32,7 +31,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     super.dispose();
   }
 
-  // Abre el selector de fecha de Flutter
+  // Mostrar selector de fecha
   Future<void> _pickDate() async {
     DateTime? picked = await showDatePicker(
       context: context,
@@ -40,26 +39,28 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       firstDate: DateTime(2000),
       lastDate: DateTime.now(),
     );
-    if (picked != _selectedDate) {
+    if (picked != null && picked != _selectedDate) {
       setState(() {
-        _selectedDate = picked!;
+        _selectedDate = picked;
       });
     }
   }
 
-  // Valida y envía el formulario
-  void _submitForm() {
+  // Guardar transacción de gasto
+  void _submitForm() async {
     if (_formKey.currentState!.validate()) {
       final gasto = Transaction(
-        description: _descController.text,
-        amount: double.parse(_amountController.text),
-        category: _selectedCategory!,
-        date: _selectedDate,
-        isIncome: false,
+        id: const Uuid().v4(), // Generar ID único
+        title: _descController.text, // Descripción del gasto
+        amount: double.parse(_amountController.text), // Monto
+        category: _selectedCategory!, // Categoría seleccionada
+        date: _selectedDate, // Fecha seleccionada
+        type: 'gasto', // Tipo de transacción
       );
-      widget.onAdd(gasto); // Llama al callback en main.dart
 
-      // Limpiar el formulario
+      await TransactionStorage.addTransaction(gasto); // Guarda localmente
+      widget.onAdd(gasto); // Notifica al widget padre
+
       _formKey.currentState!.reset();
       _descController.clear();
       _amountController.clear();
@@ -68,7 +69,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         _selectedDate = DateTime.now();
       });
 
-      // Mensaje de confirmación
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Gasto agregado')),
       );
@@ -80,13 +80,12 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Form(
-        key: _formKey, // Clave para validar el formulario
+        key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Agregar Gasto', style: Theme.of(context).textTheme.headlineSmall),
             const SizedBox(height: 16),
-            // Campo de texto para descripción
             TextFormField(
               controller: _descController,
               decoration: const InputDecoration(labelText: 'Descripción'),
@@ -98,7 +97,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               },
             ),
             const SizedBox(height: 8),
-            // Campo de texto para monto (número)
             TextFormField(
               controller: _amountController,
               decoration: const InputDecoration(labelText: 'Monto'),
@@ -115,7 +113,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               },
             ),
             const SizedBox(height: 8),
-            // Selector de categoría
             DropdownButtonFormField<String>(
               decoration: const InputDecoration(labelText: 'Categoría'),
               value: _selectedCategory,
@@ -135,7 +132,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               },
             ),
             const SizedBox(height: 8),
-            // Selector de fecha
             Row(
               children: [
                 Expanded(
@@ -150,7 +146,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            // Botón para enviar
             Center(
               child: ElevatedButton(
                 onPressed: _submitForm,

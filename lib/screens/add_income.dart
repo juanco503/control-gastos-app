@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/transaction.dart';
+import '../storage/transaction_storage';// Importa el storage
+import 'package:uuid/uuid.dart'; // Para generar un id único
 
 class AddIncomeScreen extends StatefulWidget {
   final Function(Transaction) onAdd;
@@ -19,9 +21,8 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
   String? _selectedCategory;
   DateTime _selectedDate = DateTime.now();
 
-  static const List<String> _categories = [
-    'Salario', 'Ventas', 'Otros'
-  ];
+  // Categorías
+  static const List<String> _categories = ['Salario', 'Ventas', 'Otros'];
 
   @override
   void dispose() {
@@ -30,6 +31,7 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
     super.dispose();
   }
 
+  // Selector de fecha
   Future<void> _pickDate() async {
     DateTime? picked = await showDatePicker(
       context: context,
@@ -37,24 +39,29 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
       firstDate: DateTime(2000),
       lastDate: DateTime.now(),
     );
-    if (picked != _selectedDate) {
+    if (picked != null && picked != _selectedDate) {
       setState(() {
-        _selectedDate = picked!;
+        _selectedDate = picked;
       });
     }
   }
 
-  void _submitForm() {
+  // Valida y envía el formulario
+  void _submitForm() async {
     if (_formKey.currentState!.validate()) {
       final ingreso = Transaction(
-        description: _descController.text,
+        id: const Uuid().v4(), // Generar id único
+        title: _descController.text, // descripción como título
         amount: double.parse(_amountController.text),
-        category: _selectedCategory!,
         date: _selectedDate,
-        isIncome: true,
+        type: 'ingreso', // tipo como string
+        category: _selectedCategory!,
       );
-      widget.onAdd(ingreso);
 
+      await TransactionStorage.addTransaction(ingreso); // Guarda localmente
+      widget.onAdd(ingreso); // Notifica al widget padre
+
+      // Limpiar el formulario
       _formKey.currentState!.reset();
       _descController.clear();
       _amountController.clear();
@@ -63,6 +70,7 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
         _selectedDate = DateTime.now();
       });
 
+      // Mensaje de confirmación
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Ingreso agregado')),
       );
@@ -80,6 +88,7 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
           children: [
             Text('Agregar Ingreso', style: Theme.of(context).textTheme.headlineSmall),
             const SizedBox(height: 16),
+            // Campo de texto para descripción
             TextFormField(
               controller: _descController,
               decoration: const InputDecoration(labelText: 'Descripción'),
@@ -91,6 +100,7 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
               },
             ),
             const SizedBox(height: 8),
+            // Campo de texto para monto (número)
             TextFormField(
               controller: _amountController,
               decoration: const InputDecoration(labelText: 'Monto'),
@@ -107,6 +117,7 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
               },
             ),
             const SizedBox(height: 8),
+            // Selector de categoría
             DropdownButtonFormField<String>(
               decoration: const InputDecoration(labelText: 'Categoría'),
               value: _selectedCategory,
@@ -126,6 +137,7 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
               },
             ),
             const SizedBox(height: 8),
+            // Selector de fecha
             Row(
               children: [
                 Expanded(
@@ -140,6 +152,7 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
               ],
             ),
             const SizedBox(height: 16),
+            // Botón para enviar
             Center(
               child: ElevatedButton(
                 onPressed: _submitForm,
