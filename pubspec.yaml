@@ -31,6 +31,7 @@ dependencies:
   flutter:
     sdk: flutter
   fl_chart: ^1.0.0   # Librería para gráficos en Flutter:contentReference[oaicite:1]{index=1}
+  shared_preferences: ^2.5.3 #dependencia para autenticacion
   
 
   # The following adds the Cupertino Icons font to your application.
